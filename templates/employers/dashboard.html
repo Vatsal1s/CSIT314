@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Employer Dashboard — TalentMatch{% endblock %}
+
+{% block navbar %}
+<nav class="topnav">
+    <div class="nav-brand">TalentMatch</div>
+    <div class="nav-links">
+        <a href="{% url 'employer_dashboard' %}" class="active">My Jobs</a>
+        <a href="{% url 'view_candidates' %}">Candidates</a>
+        <a href="{% url 'post_job' %}">Post a Job</a>
+    </div>
+    <div class="nav-right">
+        <span>{{ request.user.username }}</span>
+        <a href="{% url 'employer_logout' %}" class="btn btn-outline btn-sm">Logout</a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>My Job Postings</h1>
+        <a href="{% url 'post_job' %}" class="btn btn-primary">+ Post New Job</a>
+    </div>
+
+    <div class="card-grid">
+        {% for job in jobs %}
+        <div class="job-card">
+            <div class="job-card-header">
+                <h3>{{ job.title }}</h3>
+                <span class="badge">{{ job.work_mode }}</span>
+            </div>
+            <p class="job-location">{{ job.location }}</p>
+            <p class="job-description">{{ job.description|truncatechars:120 }}</p>
+            <div class="job-tags">
+                {% for skill in job.skills_required.split %}
+                <span class="tag">{{ skill }}</span>
+                {% endfor %}
+            </div>
+            <div class="job-meta">
+                <span>{{ job.get_education_required_display }}</span>
+                <span>{{ job.years_experience }} yrs exp</span>
+            </div>
+            <a href="{% url 'employer_recommendations' job.id %}" class="btn btn-outline btn-sm mt-sm">View Top Candidates</a>
+        </div>
+        {% empty %}
+        <p class="empty-state">You haven't posted any jobs yet. <a href="{% url 'post_job' %}">Post your first job.</a></p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

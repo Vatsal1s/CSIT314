@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Post a Job — TalentMatch{% endblock %}
+
+{% block navbar %}
+<nav class="topnav">
+    <div class="nav-brand">TalentMatch</div>
+    <div class="nav-links">
+        <a href="{% url 'employer_dashboard' %}">My Jobs</a>
+        <a href="{% url 'view_candidates' %}">Candidates</a>
+        <a href="{% url 'post_job' %}" class="active">Post a Job</a>
+    </div>
+    <div class="nav-right">
+        <span>{{ request.user.username }}</span>
+        <a href="{% url 'employer_logout' %}" class="btn btn-outline btn-sm">Logout</a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>Post a New Job</h1>
+        <p>Fill in the job details to attract the right candidates.</p>
+    </div>
+
+    <div class="form-card">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Job Title</label>
+                    <input type="text" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" name="location" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Job Description</label>
+                <textarea name="description" rows="5" required></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Required Education Level</label>
+                    <select name="education_required" required>
+                        <option value="">Select education</option>
+                        <option value="high_school">High School</option>
+                        <option value="associate">Associate Degree</option>
+                        <option value="bachelor">Bachelor Degree</option>
+                        <option value="master">Master Degree</option>
+                        <option value="phd">PhD</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Work Mode</label>
+                    <select name="work_mode" required>
+                        <option value="">Select work mode</option>
+                        <option value="remote">Remote</option>
+                        <option value="onsite">On-site</option>
+                        <option value="hybrid">Hybrid</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Required Skills <span class="hint">(comma separated)</span></label>
+                    <input type="text" name="skills_required" required>
+                </div>
+                <div class="form-group">
+                    <label>Years of Experience Required</label>
+                    <input type="number" name="years_experience" min="0" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Post Job</button>
+            <a href="{% url 'employer_dashboard' %}" class="btn btn-outline">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

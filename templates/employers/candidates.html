@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Browse Candidates — TalentMatch{% endblock %}
+
+{% block navbar %}
+<nav class="topnav">
+    <div class="nav-brand">TalentMatch</div>
+    <div class="nav-links">
+        <a href="{% url 'employer_dashboard' %}">My Jobs</a>
+        <a href="{% url 'view_candidates' %}" class="active">Candidates</a>
+        <a href="{% url 'post_job' %}">Post a Job</a>
+    </div>
+    <div class="nav-right">
+        <span>{{ request.user.username }}</span>
+        <a href="{% url 'employer_logout' %}" class="btn btn-outline btn-sm">Logout</a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>Browse Candidates</h1>
+        <p>Search and filter through all available candidates.</p>
+    </div>
+
+    <form method="GET" class="filter-bar">
+        <input type="text" name="q" placeholder="Search by skill or major..." value="{{ search_query }}">
+        <input type="text" name="skill" placeholder="Filter by skill..." value="{{ skill_filter }}">
+        <select name="education">
+            <option value="">All education levels</option>
+            <option value="high_school" {% if education_filter == 'high_school' %}selected{% endif %}>High School</option>
+            <option value="associate" {% if education_filter == 'associate' %}selected{% endif %}>Associate Degree</option>
+            <option value="bachelor" {% if education_filter == 'bachelor' %}selected{% endif %}>Bachelor Degree</option>
+            <option value="master" {% if education_filter == 'master' %}selected{% endif %}>Master Degree</option>
+            <option value="phd" {% if education_filter == 'phd' %}selected{% endif %}>PhD</option>
+        </select>
+        <input type="number" name="experience" placeholder="Min. years exp" value="{{ experience_filter }}" min="0">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="{% url 'view_candidates' %}" class="btn btn-outline">Clear</a>
+    </form>
+
+    <div class="card-grid">
+        {% for candidate in candidates %}
+        <div class="candidate-card">
+            <div class="candidate-card-header">
+                <h3>{{ candidate.full_name }}</h3>
+                <span class="badge">{{ candidate.years_experience }} yrs</span>
+            </div>
+            <p class="candidate-major">{{ candidate.major }}</p>
+            <p class="candidate-location">{{ candidate.location }}</p>
+            <p class="candidate-edu">{{ candidate.get_education_display }}</p>
+            <div class="job-tags">
+                {% for skill in candidate.skills.split %}
+                <span class="tag">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <p class="empty-state">No candidates found matching your filters.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

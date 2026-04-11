@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Top Candidates — TalentMatch{% endblock %}
+
+{% block navbar %}
+<nav class="topnav">
+    <div class="nav-brand">TalentMatch</div>
+    <div class="nav-links">
+        <a href="{% url 'employer_dashboard' %}">My Jobs</a>
+        <a href="{% url 'view_candidates' %}">Candidates</a>
+        <a href="{% url 'post_job' %}">Post a Job</a>
+    </div>
+    <div class="nav-right">
+        <span>{{ request.user.username }}</span>
+        <a href="{% url 'employer_logout' %}" class="btn btn-outline btn-sm">Logout</a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>Top Candidates for "{{ job.title }}"</h1>
+        <p>The 10 most suitable candidates based on the job requirements.</p>
+        <a href="{% url 'employer_dashboard' %}" class="btn btn-outline">Back to My Jobs</a>
+    </div>
+
+    <div class="card-grid">
+        {% for item in recommendations %}
+        <div class="candidate-card">
+            <div class="candidate-card-header">
+                <h3>{{ item.candidate.full_name }}</h3>
+                <span class="badge badge-score">{{ item.score }} pts</span>
+            </div>
+            <p class="candidate-major">{{ item.candidate.major }}</p>
+            <p class="candidate-location">{{ item.candidate.location }}</p>
+            <p class="candidate-edu">{{ item.candidate.get_education_display }}</p>
+            <p class="candidate-exp">{{ item.candidate.years_experience }} years experience</p>
+            <div class="job-tags">
+                {% for skill in item.candidate.skills.split %}
+                <span class="tag">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <p class="empty-state">No candidates available yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

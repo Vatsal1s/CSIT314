@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Job Recommendations — TalentMatch{% endblock %}
+
+{% block navbar %}
+<nav class="topnav">
+    <div class="nav-brand">TalentMatch</div>
+    <div class="nav-links">
+        <a href="{% url 'candidate_dashboard' %}">Jobs</a>
+        <a href="{% url 'candidate_profile' %}">Profile</a>
+        <a href="{% url 'candidate_recommendations' %}" class="active">Recommendations</a>
+    </div>
+    <div class="nav-right">
+        <span>{{ request.user.username }}</span>
+        <a href="{% url 'candidate_logout' %}" class="btn btn-outline btn-sm">Logout</a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>Top Job Recommendations</h1>
+        <p>The 10 most relevant jobs based on your profile.</p>
+    </div>
+
+    <div class="card-grid">
+        {% for item in recommendations %}
+        <div class="job-card">
+            <div class="job-card-header">
+                <h3>{{ item.job.title }}</h3>
+                <span class="badge badge-score">{{ item.score }} pts</span>
+            </div>
+            <p class="job-company">{{ item.job.employer.company_name }}</p>
+            <p class="job-location">{{ item.job.location }}</p>
+            <p class="job-description">{{ item.job.description|truncatechars:120 }}</p>
+            <div class="job-tags">
+                {% for skill in item.job.skills_required.split %}
+                <span class="tag">{{ skill }}</span>
+                {% endfor %}
+            </div>
+            <div class="job-meta">
+                <span>{{ item.job.get_education_required_display }}</span>
+                <span>{{ item.job.years_experience }} yrs exp</span>
+                <span>{{ item.job.work_mode }}</span>
+            </div>
+        </div>
+        {% empty %}
+        <p class="empty-state">No recommendations yet. Make sure your profile is complete.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
