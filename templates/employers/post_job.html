@@ -5,12 +5,13 @@
 <nav class="topnav">
     <div class="nav-brand">TalentMatch</div>
     <div class="nav-links">
-        <a href="{% url 'employer_dashboard' %}">My Jobs</a>
+        <a href="{% url 'employer_dashboard' %}">Dashboard</a>
         <a href="{% url 'view_candidates' %}">Candidates</a>
+        <a href="{% url 'recommendations_list' %}">Recommendations</a>
         <a href="{% url 'post_job' %}" class="active">Post a Job</a>
     </div>
     <div class="nav-right">
-        <span>{{ request.user.username }}</span>
+        <span>{{ request.user.email }}</span>
         <a href="{% url 'employer_logout' %}" class="btn btn-outline btn-sm">Logout</a>
     </div>
 </nav>
@@ -20,7 +21,6 @@
 <div class="page-container">
     <div class="page-header">
         <h1>Post a New Job</h1>
-        <p>Fill in the job details to attract the right candidates.</p>
     </div>
 
     <div class="form-card">
@@ -64,13 +64,32 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Required Skills <span class="hint">(comma separated)</span></label>
-                    <input type="text" name="skills_required" required>
+                    <label>Job Type</label>
+                    <select name="job_type" required>
+                        <option value="full_time">Full-time</option>
+                        <option value="part_time">Part-time</option>
+                        <option value="contract">Contract</option>
+                        <option value="casual">Casual</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Years of Experience Required</label>
                     <input type="number" name="years_experience" min="0" required>
                 </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Min. Salary ($)</label>
+                    <input type="number" name="salary_min" min="0" placeholder="e.g. 50000" required>
+                </div>
+                <div class="form-group">
+                    <label>Max. Salary ($)</label>
+                    <input type="number" name="salary_max" min="0" placeholder="e.g. 80000" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Required Skills <span class="hint">(comma separated)</span></label>
+                <input type="text" name="skills_required" required>
             </div>
             <button type="submit" class="btn btn-primary">Post Job</button>
             <a href="{% url 'employer_dashboard' %}" class="btn btn-outline">Cancel</a>

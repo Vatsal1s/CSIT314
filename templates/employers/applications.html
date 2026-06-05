@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load talent_filters %}
+{% block title %}Applications — {{ job.title }} — TalentMatch{% endblock %}
+
+{% block navbar %}
+<nav class="topnav">
+    <div class="nav-brand">TalentMatch</div>
+    <div class="nav-links">
+        <a href="{% url 'employer_dashboard' %}">Dashboard</a>
+        <a href="{% url 'view_candidates' %}">Candidates</a>
+        <a href="{% url 'recommendations_list' %}">Recommendations</a>
+        <a href="{% url 'post_job' %}">Post a Job</a>
+    </div>
+    <div class="nav-right">
+        <span>{{ request.user.email }}</span>
+        <a href="{% url 'employer_logout' %}" class="btn btn-outline btn-sm">Logout</a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1>Applications</h1>
+            <p>{{ job.title }} &mdash; {{ applications|length }} applicant{{ applications|length|pluralize }}</p>
+        </div>
+        <a href="{% url 'employer_dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
+    </div>
+
+    <div class="card-grid">
+        {% for app in applications %}
+        <div class="candidate-card">
+            <div class="candidate-card-header">
+                <h3>{{ app.candidate.full_name }}</h3>
+                <span class="badge badge-{{ app.status }}">{{ app.get_status_display }}</span>
+            </div>
+            <p class="candidate-major">{{ app.candidate.major }}</p>
+            <p class="candidate-location">{{ app.candidate.location }}</p>
+            <p class="candidate-edu">{{ app.candidate.get_education_display }}</p>
+            <p class="candidate-exp">{{ app.candidate.years_experience }} yrs experience</p>
+            {% if app.candidate.preferred_work_mode %}
+            <p class="candidate-mode">Prefers: {{ app.candidate.get_preferred_work_mode_display }}</p>
+            {% endif %}
+            <div class="job-tags">
+                {% for skill in app.candidate.skills|split_comma %}
+                <span class="tag">{{ skill }}</span>
+                {% endfor %}
+            </div>
+            <p style="font-size:0.82rem; color:#9ca3af; margin-top:4px;">Applied {{ app.applied_at|date:"d M Y" }}</p>
+            {% if app.status == 'pending' %}
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <form method="POST" action="{% url 'update_application' app.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="accepted">
+                    <button type="submit" class="btn btn-primary btn-sm">Accept</button>
+                </form>
+                <form method="POST" action="{% url 'update_application' app.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="rejected">
+                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p class="empty-state">No applications yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

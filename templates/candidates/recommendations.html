@@ -1,16 +1,17 @@
 {% extends 'base.html' %}
+{% load talent_filters %}
 {% block title %}Job Recommendations — TalentMatch{% endblock %}
 
 {% block navbar %}
 <nav class="topnav">
     <div class="nav-brand">TalentMatch</div>
     <div class="nav-links">
-        <a href="{% url 'candidate_dashboard' %}">Jobs</a>
-        <a href="{% url 'candidate_profile' %}">Profile</a>
+        <a href="{% url 'candidate_dashboard' %}">Dashboard</a>
+        <a href="{% url 'candidate_jobs' %}">Jobs</a>
         <a href="{% url 'candidate_recommendations' %}" class="active">Recommendations</a>
     </div>
     <div class="nav-right">
-        <span>{{ request.user.username }}</span>
+        <span>{{ request.user.email }}</span>
         <a href="{% url 'candidate_logout' %}" class="btn btn-outline btn-sm">Logout</a>
     </div>
 </nav>
@@ -19,8 +20,13 @@
 {% block content %}
 <div class="page-container">
     <div class="page-header">
-        <h1>Top Job Recommendations</h1>
-        <p>The 10 most relevant jobs based on your profile.</p>
+        {% if is_member %}
+        <h1>All Job Recommendations</h1>
+        <span class="badge badge-member">Member</span>
+        {% else %}
+        <h1>Top 10 Job Recommendations</h1>
+        <a href="{% url 'candidate_membership' %}" class="btn btn-primary btn-sm">Upgrade to Member</a>
+        {% endif %}
     </div>
 
     <div class="card-grid">
@@ -28,21 +34,36 @@
         <div class="job-card">
             <div class="job-card-header">
                 <h3>{{ item.job.title }}</h3>
-                <span class="badge badge-score">{{ item.score }} pts</span>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <span class="badge">#{{ forloop.counter }}</span>
+                    <span class="badge badge-score">{{ item.score }} pts</span>
+                </div>
             </div>
             <p class="job-company">{{ item.job.employer.company_name }}</p>
             <p class="job-location">{{ item.job.location }}</p>
+            {% if item.job.salary_min or item.job.salary_max %}
+            <p class="job-salary">${{ item.job.salary_min }} – ${{ item.job.salary_max }}</p>
+            {% endif %}
             <p class="job-description">{{ item.job.description|truncatechars:120 }}</p>
             <div class="job-tags">
-                {% for skill in item.job.skills_required.split %}
+                {% for skill in item.job.skills_required|split_comma %}
                 <span class="tag">{{ skill }}</span>
                 {% endfor %}
             </div>
             <div class="job-meta">
                 <span>{{ item.job.get_education_required_display }}</span>
                 <span>{{ item.job.years_experience }} yrs exp</span>
-                <span>{{ item.job.work_mode }}</span>
+                <span>{{ item.job.get_work_mode_display }}</span>
             </div>
+            {% if item.job.id in applied_ids %}
+            <span class="btn btn-outline btn-sm mt-sm" style="opacity:0.55;cursor:default;">Applied</span>
+            {% else %}
+            <form method="POST" action="{% url 'apply_to_job' item.job.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="candidate_recommendations">
+                <button type="submit" class="btn btn-primary btn-sm mt-sm">Apply</button>
+            </form>
+            {% endif %}
         </div>
         {% empty %}
         <p class="empty-state">No recommendations yet. Make sure your profile is complete.</p>

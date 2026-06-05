@@ -1,16 +1,17 @@
 {% extends 'base.html' %}
-{% block title %}Job Listings — TalentMatch{% endblock %}
+{% block title %}Dashboard — TalentMatch{% endblock %}
 
 {% block navbar %}
 <nav class="topnav">
     <div class="nav-brand">TalentMatch</div>
     <div class="nav-links">
-        <a href="{% url 'candidate_dashboard' %}" class="active">Jobs</a>
-        <a href="{% url 'candidate_profile' %}">Profile</a>
+        <a href="{% url 'candidate_dashboard' %}" class="active">Dashboard</a>
+        <a href="{% url 'candidate_jobs' %}">Jobs</a>
         <a href="{% url 'candidate_recommendations' %}">Recommendations</a>
     </div>
     <div class="nav-right">
-        <span>{{ request.user.username }}</span>
+        {% if profile and profile.is_member %}<span class="badge badge-member">Member</span>{% endif %}
+        <span>{{ request.user.email }}</span>
         <a href="{% url 'candidate_logout' %}" class="btn btn-outline btn-sm">Logout</a>
     </div>
 </nav>
@@ -19,43 +20,98 @@
 {% block content %}
 <div class="page-container">
     <div class="page-header">
-        <h1>Job Listings</h1>
-        <p>Browse all available opportunities.</p>
+        <h1>My Profile</h1>
+        {% if not profile or not profile.is_member %}
+        <a href="{% url 'candidate_membership' %}" class="btn btn-outline btn-sm">Upgrade to Member</a>
+        {% endif %}
     </div>
 
-    <form method="GET" class="search-bar">
-        <input type="text" name="q" placeholder="Search by job description..." value="{{ query }}">
-        <button type="submit" class="btn btn-primary">Search</button>
-        {% if query %}<a href="{% url 'candidate_dashboard' %}" class="btn btn-outline">Clear</a>{% endif %}
-    </form>
+    <div class="form-card">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="full_name" value="{{ profile.full_name|default:'' }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ profile.phone|default:'' }}" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Education Level</label>
+                    <select name="education" required>
+                        <option value="">Select education</option>
+                        <option value="high_school" {% if profile.education == 'high_school' %}selected{% endif %}>High School</option>
+                        <option value="associate" {% if profile.education == 'associate' %}selected{% endif %}>Associate Degree</option>
+                        <option value="bachelor" {% if profile.education == 'bachelor' %}selected{% endif %}>Bachelor Degree</option>
+                        <option value="master" {% if profile.education == 'master' %}selected{% endif %}>Master Degree</option>
+                        <option value="phd" {% if profile.education == 'phd' %}selected{% endif %}>PhD</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Major / Field of Study</label>
+                    <input type="text" name="major" value="{{ profile.major|default:'' }}" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Years of Experience</label>
+                    <input type="number" name="years_experience" value="{{ profile.years_experience|default:'0' }}" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" name="location" value="{{ profile.location|default:'' }}" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Skills <span class="hint">(comma separated)</span></label>
+                <input type="text" name="skills" value="{{ profile.skills|default:'' }}" required>
+            </div>
+            <div class="form-group">
+                <label>Work Experience</label>
+                <textarea name="work_experience" rows="4">{{ profile.work_experience|default:'' }}</textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Preferred Work Mode</label>
+                    <select name="preferred_work_mode">
+                        <option value="">No preference</option>
+                        <option value="remote" {% if profile.preferred_work_mode == 'remote' %}selected{% endif %}>Remote</option>
+                        <option value="onsite" {% if profile.preferred_work_mode == 'onsite' %}selected{% endif %}>On-site</option>
+                        <option value="hybrid" {% if profile.preferred_work_mode == 'hybrid' %}selected{% endif %}>Hybrid</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Preferred Location</label>
+                    <input type="text" name="preferred_location" value="{{ profile.preferred_location|default:'' }}">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Profile</button>
+        </form>
+    </div>
 
-    {% if query %}
-    <p class="results-info">Showing results for "<strong>{{ query }}</strong>" — {{ jobs|length }} job(s) found</p>
-    {% endif %}
-
-    <div class="card-grid">
-        {% for job in jobs %}
-        <div class="job-card">
-            <div class="job-card-header">
-                <h3>{{ job.title }}</h3>
-                <span class="badge">{{ job.work_mode }}</span>
-            </div>
-            <p class="job-company">{{ job.employer.company_name }}</p>
-            <p class="job-location">{{ job.location }}</p>
-            <p class="job-description">{{ job.description|truncatechars:120 }}</p>
-            <div class="job-tags">
-                {% for skill in job.skills_required.split %}
-                <span class="tag">{{ skill }}</span>
-                {% endfor %}
-            </div>
-            <div class="job-meta">
-                <span>{{ job.get_education_required_display }}</span>
-                <span>{{ job.years_experience }} yrs exp</span>
-            </div>
+    {% if applications %}
+    <div style="border-top: 2px solid #e5e7eb; margin-top: 48px; padding-top: 32px;">
+        <div class="page-header" style="margin-bottom: 24px;">
+            <h2>My Applications</h2>
         </div>
-        {% empty %}
-        <p class="empty-state">No jobs found.</p>
-        {% endfor %}
+        <div class="card-grid">
+            {% for app in applications %}
+            <div class="job-card">
+                <div class="job-card-header">
+                    <h3>{{ app.job.title }}</h3>
+                    <span class="badge badge-{{ app.status }}">{{ app.get_status_display }}</span>
+                </div>
+                <p class="job-company">{{ app.job.employer.company_name }}</p>
+                <p class="job-location">{{ app.job.location }}</p>
+                <p style="font-size:0.82rem; color:#9ca3af; margin-top:4px;">Applied {{ app.applied_at|date:"d M Y" }}</p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}

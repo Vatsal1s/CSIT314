@@ -1,16 +1,18 @@
 {% extends 'base.html' %}
+{% load talent_filters %}
 {% block title %}Top Candidates — TalentMatch{% endblock %}
 
 {% block navbar %}
 <nav class="topnav">
     <div class="nav-brand">TalentMatch</div>
     <div class="nav-links">
-        <a href="{% url 'employer_dashboard' %}">My Jobs</a>
+        <a href="{% url 'employer_dashboard' %}">Dashboard</a>
         <a href="{% url 'view_candidates' %}">Candidates</a>
+        <a href="{% url 'recommendations_list' %}" class="active">Recommendations</a>
         <a href="{% url 'post_job' %}">Post a Job</a>
     </div>
     <div class="nav-right">
-        <span>{{ request.user.username }}</span>
+        <span>{{ request.user.email }}</span>
         <a href="{% url 'employer_logout' %}" class="btn btn-outline btn-sm">Logout</a>
     </div>
 </nav>
@@ -19,8 +21,13 @@
 {% block content %}
 <div class="page-container">
     <div class="page-header">
-        <h1>Top Candidates for "{{ job.title }}"</h1>
-        <p>The 10 most suitable candidates based on the job requirements.</p>
+        {% if is_member %}
+        <h1>All Candidates for "{{ job.title }}"</h1>
+        <span class="badge badge-member">Member</span>
+        {% else %}
+        <h1>Top 10 Candidates for "{{ job.title }}"</h1>
+        <a href="{% url 'employer_membership' %}" class="btn btn-primary btn-sm">Upgrade to Member</a>
+        {% endif %}
         <a href="{% url 'employer_dashboard' %}" class="btn btn-outline">Back to My Jobs</a>
     </div>
 
@@ -29,14 +36,20 @@
         <div class="candidate-card">
             <div class="candidate-card-header">
                 <h3>{{ item.candidate.full_name }}</h3>
-                <span class="badge badge-score">{{ item.score }} pts</span>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <span class="badge">#{{ forloop.counter }}</span>
+                    <span class="badge badge-score">{{ item.score }} pts</span>
+                </div>
             </div>
             <p class="candidate-major">{{ item.candidate.major }}</p>
             <p class="candidate-location">{{ item.candidate.location }}</p>
             <p class="candidate-edu">{{ item.candidate.get_education_display }}</p>
             <p class="candidate-exp">{{ item.candidate.years_experience }} years experience</p>
+            {% if item.candidate.preferred_work_mode %}
+            <p class="candidate-mode">Prefers: {{ item.candidate.get_preferred_work_mode_display }}</p>
+            {% endif %}
             <div class="job-tags">
-                {% for skill in item.candidate.skills.split %}
+                {% for skill in item.candidate.skills|split_comma %}
                 <span class="tag">{{ skill }}</span>
                 {% endfor %}
             </div>

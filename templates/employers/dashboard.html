@@ -1,16 +1,19 @@
 {% extends 'base.html' %}
+{% load talent_filters %}
 {% block title %}Employer Dashboard — TalentMatch{% endblock %}
 
 {% block navbar %}
 <nav class="topnav">
     <div class="nav-brand">TalentMatch</div>
     <div class="nav-links">
-        <a href="{% url 'employer_dashboard' %}" class="active">My Jobs</a>
+        <a href="{% url 'employer_dashboard' %}" class="active">Dashboard</a>
         <a href="{% url 'view_candidates' %}">Candidates</a>
+        <a href="{% url 'recommendations_list' %}">Recommendations</a>
         <a href="{% url 'post_job' %}">Post a Job</a>
     </div>
     <div class="nav-right">
-        <span>{{ request.user.username }}</span>
+        {% if employer.is_member %}<span class="badge badge-member">Member</span>{% endif %}
+        <span>{{ request.user.email }}</span>
         <a href="{% url 'employer_logout' %}" class="btn btn-outline btn-sm">Logout</a>
     </div>
 </nav>
@@ -18,9 +21,21 @@
 
 {% block content %}
 <div class="page-container">
-    <div class="page-header">
+
+    <div class="profile-summary-card">
+        <div class="profile-summary-info">
+            <h2>{{ employer.company_name }}</h2>
+            <p class="profile-summary-exp">{{ employer.company_info|truncatechars:200 }}</p>
+        </div>
+        <div class="profile-summary-actions">
+            {% if employer.is_member %}<span class="badge badge-member">Member</span>{% endif %}
+            <a href="{% url 'edit_employer_profile' %}" class="btn btn-outline btn-sm">Edit Company Profile</a>
+            <a href="{% url 'post_job' %}" class="btn btn-primary btn-sm">+ Post New Job</a>
+        </div>
+    </div>
+
+    <div class="page-header" style="margin-top: 32px;">
         <h1>My Job Postings</h1>
-        <a href="{% url 'post_job' %}" class="btn btn-primary">+ Post New Job</a>
     </div>
 
     <div class="card-grid">
@@ -28,23 +43,33 @@
         <div class="job-card">
             <div class="job-card-header">
                 <h3>{{ job.title }}</h3>
-                <span class="badge">{{ job.work_mode }}</span>
+                <span class="badge">{{ job.get_work_mode_display }}</span>
             </div>
             <p class="job-location">{{ job.location }}</p>
+            {% if job.salary_min or job.salary_max %}
+            <p class="job-salary">${{ job.salary_min }} – ${{ job.salary_max }}</p>
+            {% endif %}
             <p class="job-description">{{ job.description|truncatechars:120 }}</p>
             <div class="job-tags">
-                {% for skill in job.skills_required.split %}
+                {% for skill in job.skills_required|split_comma %}
                 <span class="tag">{{ skill }}</span>
                 {% endfor %}
             </div>
             <div class="job-meta">
                 <span>{{ job.get_education_required_display }}</span>
                 <span>{{ job.years_experience }} yrs exp</span>
+                <span>{{ job.get_job_type_display }}</span>
             </div>
-            <a href="{% url 'employer_recommendations' job.id %}" class="btn btn-outline btn-sm mt-sm">View Top Candidates</a>
+            <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+                <a href="{% url 'view_applications' job.id %}" class="btn btn-outline btn-sm">Applications ({{ job.jobapplication_set.count }})</a>
+                <form method="POST" action="{% url 'delete_job' job.id %}" style="display:inline;" onsubmit="return confirm('Delete this job posting?')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </div>
         </div>
         {% empty %}
-        <p class="empty-state">You haven't posted any jobs yet. <a href="{% url 'post_job' %}">Post your first job.</a></p>
+        <p class="empty-state">No jobs posted yet. <a href="{% url 'post_job' %}">Post your first job.</a></p>
         {% endfor %}
     </div>
 </div>

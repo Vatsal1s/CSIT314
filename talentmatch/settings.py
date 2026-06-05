@@ -1,8 +1,9 @@
 from pathlib import Path
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-@r-i10z4980^_0=fg0$n1=#b^ya9=o!k_!t*48g@n=w*d#9&5a'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-@r-i10z4980^_0=fg0$n1=#b^ya9=o!k_!t*48g@n=w*d#9&5a')
 
 DEBUG = True
 
@@ -50,11 +51,11 @@ WSGI_APPLICATION = 'talentmatch.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'Coding@24',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': config('DB_NAME', default='postgres'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
     }
 }
 
@@ -68,4 +69,3 @@ STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-LOGIN_URL = '/'

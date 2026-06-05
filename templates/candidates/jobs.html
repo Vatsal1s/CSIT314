@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load talent_filters %}
+{% block title %}Job Listings — TalentMatch{% endblock %}
+
+{% block navbar %}
+<nav class="topnav">
+    <div class="nav-brand">TalentMatch</div>
+    <div class="nav-links">
+        <a href="{% url 'candidate_dashboard' %}">Dashboard</a>
+        <a href="{% url 'candidate_jobs' %}" class="active">Jobs</a>
+        <a href="{% url 'candidate_recommendations' %}">Recommendations</a>
+    </div>
+    <div class="nav-right">
+        <span>{{ request.user.email }}</span>
+        <a href="{% url 'candidate_logout' %}" class="btn btn-outline btn-sm">Logout</a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>Job Listings</h1>
+    </div>
+
+    <form method="GET" id="search-form">
+        <div class="search-filter-bar">
+            <input type="text" name="q" placeholder="Search jobs..." value="{{ query }}" class="search-main-input">
+            <input type="text" name="location" placeholder="Location" value="{{ location_filter }}" class="search-sm-input">
+            <select name="job_type" class="search-sm-select">
+                <option value="">Job Type</option>
+                <option value="full_time" {% if job_type_filter == 'full_time' %}selected{% endif %}>Full-time</option>
+                <option value="part_time" {% if job_type_filter == 'part_time' %}selected{% endif %}>Part-time</option>
+                <option value="contract" {% if job_type_filter == 'contract' %}selected{% endif %}>Contract</option>
+                <option value="casual" {% if job_type_filter == 'casual' %}selected{% endif %}>Casual</option>
+            </select>
+
+            <div class="filter-dropdown-wrapper">
+                <button type="button" class="btn btn-outline" id="filter-toggle">
+                    Filters {% if work_mode_filter or salary_min != '0' or exp_level %}<span class="filter-dot"></span>{% endif %}
+                </button>
+                <div class="filter-dropdown-panel" id="filter-panel">
+
+                    <div class="filter-section">
+                        <div class="filter-section-title">Work Mode</div>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" name="work_mode" value="remote" {% if 'remote' in work_mode_filter %}checked{% endif %}> Remote</label>
+                            <label><input type="checkbox" name="work_mode" value="onsite" {% if 'onsite' in work_mode_filter %}checked{% endif %}> On-site</label>
+                            <label><input type="checkbox" name="work_mode" value="hybrid" {% if 'hybrid' in work_mode_filter %}checked{% endif %}> Hybrid</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-section">
+                        <div class="filter-section-title">Minimum Salary: <strong id="sal_display"></strong></div>
+                        <input type="range" name="salary_min" id="sal_slider" min="0" max="300000" step="5000" value="{{ salary_min }}">
+                        <div class="slider-labels"><span>$0</span><span>$300k+</span></div>
+                    </div>
+
+                    <div class="filter-section">
+                        <div class="filter-section-title">Experience Level</div>
+                        <select name="exp_level" class="filter-full-select">
+                            <option value="" {% if exp_level == '' %}selected{% endif %}>Any level</option>
+                            <option value="entry" {% if exp_level == 'entry' %}selected{% endif %}>Entry Level (0–2 yrs)</option>
+                            <option value="mid" {% if exp_level == 'mid' %}selected{% endif %}>Mid Level (3–5 yrs)</option>
+                            <option value="senior" {% if exp_level == 'senior' %}selected{% endif %}>Senior (6+ yrs)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">Apply Filters</button>
+                    <a href="{% url 'candidate_jobs' %}" class="btn btn-outline btn-full" style="margin-top:8px;">Clear Filters</a>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Search</button>
+            {% if query or location_filter or job_type_filter %}
+            <a href="{% url 'candidate_jobs' %}" class="btn btn-outline">Clear</a>
+            {% endif %}
+        </div>
+    </form>
+
+    {% if query or location_filter or job_type_filter or work_mode_filter or salary_min != '0' or exp_level %}
+    <p class="results-info" style="margin-top:16px;">{{ jobs|length }} job(s) found</p>
+    {% endif %}
+
+    <div class="card-grid" style="margin-top:24px;">
+        {% for job in jobs %}
+        <div class="job-card">
+            <div class="job-card-header">
+                <h3>{{ job.title }}</h3>
+                <span class="badge">{{ job.get_job_type_display }}</span>
+            </div>
+            <p class="job-company">{{ job.employer.company_name }}</p>
+            <p class="job-location">{{ job.location }}</p>
+            {% if job.salary_min or job.salary_max %}
+            <p class="job-salary">${{ job.salary_min }} – ${{ job.salary_max }}</p>
+            {% endif %}
+            <p class="job-description">{{ job.description|truncatechars:120 }}</p>
+            <div class="job-tags">
+                {% for skill in job.skills_required|split_comma %}
+                <span class="tag">{{ skill }}</span>
+                {% endfor %}
+            </div>
+            <div class="job-meta">
+                <span>{{ job.get_education_required_display }}</span>
+                <span>{{ job.years_experience }} yrs exp</span>
+                <span>{{ job.get_work_mode_display }}</span>
+            </div>
+            {% if job.id in applied_ids %}
+            <span class="btn btn-outline btn-sm mt-sm" style="opacity:0.55;cursor:default;">Applied</span>
+            {% else %}
+            <form method="POST" action="{% url 'apply_to_job' job.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="candidate_jobs">
+                <button type="submit" class="btn btn-primary btn-sm mt-sm">Apply</button>
+            </form>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p class="empty-state">No jobs found.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    const filterToggle = document.getElementById('filter-toggle');
+    const filterPanel = document.getElementById('filter-panel');
+
+    filterToggle.addEventListener('click', function() {
+        filterPanel.classList.toggle('open');
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!filterToggle.contains(e.target) && !filterPanel.contains(e.target)) {
+            filterPanel.classList.remove('open');
+        }
+    });
+
+    const salSlider = document.getElementById('sal_slider');
+    const salDisplay = document.getElementById('sal_display');
+
+    function fmtSal(v) { return v == 0 ? 'Any' : '$' + Number(v).toLocaleString() + '+'; }
+
+    salSlider.addEventListener('input', function() {
+        salDisplay.textContent = fmtSal(this.value);
+    });
+    salDisplay.textContent = fmtSal(salSlider.value);
+</script>
+{% endblock %}

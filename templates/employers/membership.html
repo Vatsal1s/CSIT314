@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Membership — TalentMatch{% endblock %}
+
+{% block navbar %}
+<nav class="topnav">
+    <div class="nav-brand">TalentMatch</div>
+    <div class="nav-links">
+        <a href="{% url 'employer_dashboard' %}">Dashboard</a>
+        <a href="{% url 'view_candidates' %}">Candidates</a>
+        <a href="{% url 'recommendations_list' %}">Recommendations</a>
+        <a href="{% url 'post_job' %}">Post a Job</a>
+    </div>
+    <div class="nav-right">
+        <span>{{ request.user.email }}</span>
+        <a href="{% url 'employer_logout' %}" class="btn btn-outline btn-sm">Logout</a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="membership-page">
+        <div class="membership-header">
+            <h1>TalentMatch Membership</h1>
+            <p>Get unlimited access to the best candidates for every role you post.</p>
+        </div>
+
+        <div class="membership-cards" style="grid-template-columns: 1fr; max-width: 440px; margin: 0 auto;">
+            <div class="membership-card member-card">
+                <div class="membership-badge">Recommended</div>
+                <h2>Member</h2>
+                <p class="membership-price">Premium <span>/ one-time upgrade</span></p>
+                <ul class="membership-features">
+                    <li>Unlimited candidate recommendations per job</li>
+                    <li>Full ranked list with match scores</li>
+                    <li>Member badge on your account</li>
+                </ul>
+                {% if employer.is_member %}
+                <span class="btn btn-primary" style="opacity:0.5;cursor:default;">Already a Member</span>
+                {% else %}
+                <form method="POST" action="{% url 'employer_upgrade_membership' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Become a Member</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

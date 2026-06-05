@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Membership — TalentMatch{% endblock %}
+
+{% block navbar %}
+<nav class="topnav">
+    <div class="nav-brand">TalentMatch</div>
+    <div class="nav-links">
+        <a href="{% url 'candidate_dashboard' %}">Dashboard</a>
+        <a href="{% url 'candidate_jobs' %}">Jobs</a>
+        <a href="{% url 'candidate_recommendations' %}">Recommendations</a>
+    </div>
+    <div class="nav-right">
+        <span>{{ request.user.email }}</span>
+        <a href="{% url 'candidate_logout' %}" class="btn btn-outline btn-sm">Logout</a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="membership-page">
+        <div class="membership-header">
+            <h1>TalentMatch Membership</h1>
+            <p>Unlock the full potential of TalentMatch and find your next role faster.</p>
+        </div>
+
+        <div class="membership-cards" style="grid-template-columns: 1fr; max-width: 440px; margin: 0 auto;">
+            <div class="membership-card member-card">
+                <div class="membership-badge">Recommended</div>
+                <h2>Member</h2>
+                <p class="membership-price">Premium <span>/ one-time upgrade</span></p>
+                <ul class="membership-features">
+                    <li>Unlimited personalised job recommendations</li>
+                    <li>Full ranked list with match scores</li>
+                    <li>Member badge on your profile</li>
+                </ul>
+                {% if not profile %}
+                <a href="{% url 'candidate_dashboard' %}" class="btn btn-outline">Complete Profile First</a>
+                {% elif profile.is_member %}
+                <span class="btn btn-primary" style="opacity:0.5;cursor:default;">Already a Member</span>
+                {% else %}
+                <form method="POST" action="{% url 'candidate_upgrade_membership' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Become a Member</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
